@@ -12,6 +12,9 @@ class Student(models.Model):
     studentName = models.CharField(max_length=200)
     mentor = models.ForeignKey(Mentor, on_delete=models.CASCADE)
     password = models.CharField(max_length=128)
+    address = models.TextField(blank=True, null=True)
+    phone = models.CharField(blank=True , null=True,max_length=15)
+    course = models.CharField(blank=True , null=True,max_length=15)
 
 class Admin(models.Model):
     adminId = models.CharField(max_length=5, primary_key=True)

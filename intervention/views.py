@@ -52,7 +52,7 @@ def login_user(request):
                     "message": "successfully"
                 }
                 # Redirect to admin page upon successful login
-                return render(request, 'admin_page.html', adminData)
+                return redirect('adminPage', adminId=admin.adminId)
             except Admin.DoesNotExist:
                 # Handle invalid admin ID or password
                 adminData = {"message": "Invalid Admin ID or password"}
@@ -74,11 +74,17 @@ def studentPage(request, studentId):
         report = Report.objects.filter(student= studentId).values()
         appointment = Appointment.objects.filter(student=studentId).values()
         mentorDetails = Mentor.objects.all().values
+        totalRepo = Report.objects.filter(student=studentId).count()
+        totalApp = Appointment.objects.filter(student=studentId).count()
+        studentDetails = Student.objects.get(studentId=studentId)
         student_details = {
             'studentDetails': student,
+            'studentDetails1':studentDetails,
             'reports': report,
             'appointmentDetails': appointment,
-            'mentorDetails':mentorDetails
+            'mentorDetails':mentorDetails,
+            'totalReport':totalRepo,
+            'totalApp':totalApp,
         }
 
         return render(request, 'student_page.html', student_details)
@@ -105,16 +111,6 @@ def lecturerPage(request, mentorId):
         # Handle case where mentor with specified ID doesn't exist
         return HttpResponse("Lecturer not found")
 
-def adminPage(request, adminId):
-    try:
-        admin = Admin.objects.get(adminId=adminId)
-        admin_details = {
-            'adminDetails': admin
-        }
-        return render(request, 'admin_page.html', admin_details)
-    except Admin.DoesNotExist:
-        # Handle case where admin with specified ID doesn't exist
-        return HttpResponse("Admin not found")
 
 def viewsReport(request, mentorId):
     displayMentor = Mentor.objects.get(mentorId=mentorId)
@@ -127,6 +123,7 @@ def viewsReport(request, mentorId):
 
     return  render(request,'lectReport.html', mentorDetails)
 
+# START REPORT SECTION
 def lectReport(request, mentorId):
     if request.method == "POST":
         menId = mentorId
@@ -143,16 +140,99 @@ def lectReport(request, mentorId):
     
     return  redirect("lecturerPage",mentorId=mentorId)
 
+
+def viewUpdateReport(request,repId):
+    repoDetails= Report.objects.get(id=repId)  # get the details of the
+    displayAllStudent = Student.objects.all().values()
+
+    mentorId = repoDetails.mentor
+    repoId = repoDetails.id
+    repoStudent = repoDetails.student
+    displayMentor = Mentor.objects.get(mentorId=mentorId.mentorId)
+    displayStudent = Student.objects.filter(mentor=mentorId.mentorId)
+
+
+    appointmentDetails = {
+        'mode':'update',
+        'mentorId': displayMentor,
+        'studentId': displayAllStudent,
+        'repo':repoId,
+        'a': mentorId,
+        'repoStudent': repoStudent
+    }  
+
+    return render(request,"lectReport.html",appointmentDetails)
+
+def submitUpdateReport(request, repId):
+    repoDetails= Report.objects.get(id=repId)  # get the details of the
+    # updateid = Appointment.objects.get(id = appId)
+
+    menId = request.POST['reportMentorId']
+    studentId = request.POST['reportStudentId']
+    datetime = request.POST['reportDate']
+    category = request.POST['reportCategory']
+    description = request.POST['reportDesc']
+
+
+    mentorID = Mentor.objects.get(mentorId=menId)
+    stuID = Student.objects.get(studentId=studentId)
+
+    repoDetails.mentor=mentorID
+    repoDetails.student=stuID
+    repoDetails.date=datetime
+    repoDetails.reportCategory=category
+    repoDetails.reportText=description
+
+    repoDetails.save()
+
+    return redirect('lecturerPage',mentorId=menId)
+    # return render(request,"lectReport.html",appointmentDetails)
+
+def viewDeleteReport(request, repId, mentorId):
+    repoDetails= Report.objects.get(id=repId)
+    repoDetails.delete()
+
+    return redirect('lecturerPage',mentorId=mentorId)
+
+def searchReport(request, mentorId):
+    searchData = Student.objects.get(mentor=mentorId)
+    searchName = Student.objects.filter(Q(studentName=request.GET.get('searchItem')))
+
+
+    lecturer = Mentor.objects.get(mentorId=mentorId)
+    report = Report.objects.all().values
+    studentDetails = Student.objects.all().values
+    appointment = Appointment.objects.filter(mentor=mentorId).values()
+
+    lecturer_details = {
+        'mode':'search',
+        'lecturerDetails': lecturer,
+        'reports': report,
+        'studentDetails':studentDetails,
+        'searchName': searchName,
+        'appointmentDetails': appointment,
+    }
+
+    return render(request,'lecturer_page.html', lecturer_details)
+
+
+
+# END REPORT SECTION
+
 def displayStudent(request, mentorId):
+
     mentorDetails = Mentor.objects.filter(mentorId=mentorId).values()
     mentorId = Mentor.objects.filter(mentorId=mentorId).values('mentorId')
 
     student = Student.objects.all().values
+    allMentor = Mentor.objects.all().values()
+    
     
     studentDetails = {
         'studentDetails':student,
         'mentorDetails':mentorId,
         'lecturerDetails':mentorDetails,
+        'allMentor': allMentor,
         'mode': 'allStudent'
     }
     return render(request,'myStudent.html',studentDetails)
@@ -161,12 +241,14 @@ def findMyMentee(request, mentorId):
     mentorDetails = Mentor.objects.filter(mentorId=mentorId).values()
     mentorId = Mentor.objects.filter(mentorId=mentorId).values('mentorId')
 
+    allMentor = Mentor.objects.all().values()
     student = Student.objects.filter(mentor=mentorId[0]['mentorId']).values()
 
     menteeDetails = {
         'studentDetails':student,
         'mentorDetails':mentorId,
         'lecturerDetails':mentorDetails,
+        'allMentor': allMentor,
         'mode': 'menteeOnly'        
     }
     return render(request,"myStudent.html",menteeDetails)
@@ -242,46 +324,233 @@ def submitUpdateAppointment(request, appId):
     updateid.save()
     return redirect('lecturerPage',mentorId=menId)
 
-def viewUpdateReport(request,repId):
-    repoDetails= Report.objects.get(id=repId)  # get the details of the
-    displayAllStudent = Student.objects.all().values()
+def viewDeleteAppo(request,appId, mentorId):
+    appoDetails= Appointment.objects.get(id=appId)
+    appoDetails.delete()
 
-    mentorId = repoDetails.mentor
-    repoId = repoDetails.id
-    displayMentor = Mentor.objects.get(mentorId=mentorId.mentorId)
-    displayStudent = Student.objects.filter(mentor=mentorId.mentorId)
+    return redirect('lecturerPage',mentorId=mentorId)
+
+def displayReport(request,adminId):
+    admin = Admin.objects.get(adminId=adminId)
+    reportDetails = Report.objects.all().values
+    studentDetails = Student.objects.all().values
+    mentorDetails = Mentor.objects.all().values
+
+    context={
+        'adminDetails':admin,
+        'reportDetails': reportDetails,
+        'studentDetails': studentDetails,
+        'mentorDetails': mentorDetails,
+        'mode':'displayReport',
+    }
+    return render(request, 'admin_page.html', context)
+
+def displayApp(request,adminId):
+    admin = Admin.objects.get(adminId=adminId)
+    reportDetails = Report.objects.all().values
+    studentDetails = Student.objects.all().values
+    mentorDetails = Mentor.objects.all().values
+    appointmentDetails = Appointment.objects.all().values
+
+    context={
+        'adminDetails':admin,
+        'reportDetails': reportDetails,
+        'studentDetails': studentDetails,
+        'mentorDetails': mentorDetails,
+        'appointmentDetails': appointmentDetails,
+        'mode':'displayApp',
+    }
+    return render(request, 'admin_page.html', context)
 
 
-    appointmentDetails = {
-        'mode':'update',
-        'mentorId': displayMentor,
-        'studentId': displayAllStudent,
-        'repo':repoId
-    }  
+def adminDisplayStudent(request,adminId):
+    admin = Admin.objects.get(adminId=adminId)
+    reportDetails = Report.objects.all().values
+    studentDetails = Student.objects.all().values
+    mentorDetails = Mentor.objects.all().values
+    appointmentDetails = Appointment.objects.all().values
 
-    return render(request,"lectReport.html",appointmentDetails)
+    context={
+        'adminDetails':admin,
+        'reportDetails': reportDetails,
+        'studentDetails': studentDetails,
+        'mentorDetails': mentorDetails,
+        'appointmentDetails': appointmentDetails,
+        'mode':'displayStudent',
+    }
+    return render(request, 'admin_page.html', context)
 
-def submitUpdateReport(request, repId):
-    repoDetails= Report.objects.get(id=repId)  # get the details of the
-    # updateid = Appointment.objects.get(id = appId)
+def adminDisplayMentor(request,adminId):
+    admin = Admin.objects.get(adminId=adminId)
+    reportDetails = Report.objects.all().values
+    studentDetails = Student.objects.all().values
+    mentorDetails = Mentor.objects.all().values
+    appointmentDetails = Appointment.objects.all().values
 
-    menId = request.POST['reportMentorId']
-    studentId = request.POST['reportStudentId']
-    datetime = request.POST['reportDate']
-    category = request.POST['reportCategory']
-    description = request.POST['reportDesc']
+    context={
+        'adminDetails':admin,
+        'reportDetails': reportDetails,
+        'studentDetails': studentDetails,
+        'mentorDetails': mentorDetails,
+        'appointmentDetails': appointmentDetails,
+        'mode':'displayMentor',
+    }
+    return render(request, 'admin_page.html', context)
 
+def adminAddMentor(request, adminId):
+    admin = Admin.objects.get(adminId=adminId)
+    reportDetails = Report.objects.all().values
+    studentDetails = Student.objects.all().values
+    mentorDetails = Mentor.objects.all().values
+    appointmentDetails = Appointment.objects.all().values
 
-    mentorID = Mentor.objects.get(mentorId=menId)
-    stuID = Student.objects.get(studentId=studentId)
+    context={
+        'adminDetails':admin,
+        'reportDetails': reportDetails,
+        'studentDetails': studentDetails,
+        'mentorDetails': mentorDetails,
+        'appointmentDetails': appointmentDetails,
+        'mode':'displayMentor',
+    }
+    return render(request, 'addMentor.html', context)
 
-    repoDetails.mentor=mentorID
-    repoDetails.student=stuID
-    repoDetails.date=datetime
-    repoDetails.reportCategory=category
-    repoDetails.reportText=description
+def adminAddStudent(request, adminId):
+    admin = Admin.objects.get(adminId=adminId)
+    reportDetails = Report.objects.all().values
+    studentDetails = Student.objects.all().values
+    mentorDetails = Mentor.objects.all().values
+    appointmentDetails = Appointment.objects.all().values
 
-    repoDetails.save()
+    context={
+        'adminDetails':admin,
+        'reportDetails': reportDetails,
+        'studentDetails': studentDetails,
+        'mentorDetails': mentorDetails,
+        'appointmentDetails': appointmentDetails,
+        'mode':'displayMentor',
+    }
+    return render(request, 'addStudent.html', context)
+    
+def adminSubmitAddMentor(request,adminId):
+    mentorDetails = Mentor.objects.all().values()
+    admin = Admin.objects.get(adminId=adminId)
+    if request.method == "POST":
+        mentorId = 'l'+ request.POST['username']
+        mentorName = request.POST['name']
+        mentorPass = request.POST['password']
+        mentorConfirmPass = request.POST['confirmPassword']
 
-    return redirect('lecturerPage',mentorId=menId)
-    # return render(request,"lectReport.html",appointmentDetails)
+        if mentorPass != mentorConfirmPass:
+            messages = {
+                "message":"Password doesn't match!",
+                'adminDetails': admin,
+                'mentorDetails':mentorDetails
+            }
+            return render(request, 'addStudent.html', messages)
+        else:
+            try:
+                mentor = Mentor(mentorId=mentorId,mentorName=mentorName,password=mentorPass)
+                mentor.save()
+                return redirect('adminPage', adminId=adminId)
+            except:
+                messages = {
+                "message":"Try again!",
+                'adminDetails': admin
+                }
+                return render(request, 'addStudent.html', messages)
+            
+            messages = {
+                "messages":"error"
+            }
+    return render(request, 'addMentor.html', messages)
+
+def adminSubmitAddStudent(request, adminId):
+    mentorDetails = Mentor.objects.all().values()
+    admin = Admin.objects.get(adminId=adminId)
+    if request.method == "POST":
+        studentId = "ST"+request.POST['username']
+        studentName = request.POST['name']
+        studentMentor = request.POST['mentor']
+        studentPass = request.POST['password']
+        studentConfirmPass = request.POST['confirmPassword']
+
+        menId = Mentor.objects.get(mentorId=studentMentor)
+        if studentPass != studentConfirmPass:
+            messages = {
+                "message":"Password doesn't match!",
+                'adminDetails': admin,
+                'mentorDetails':mentorDetails
+            }
+            return render(request, 'addStudent.html', messages)
+        else:
+            menId = Mentor.objects.get(mentorId=studentMentor)
+            student = Student(studentId=studentId,studentName=studentName,mentor=menId,password=studentPass)
+            student.save()
+            return redirect('adminPage', adminId=adminId)
+
+    return render(request, 'addStudent.html', messages)
+
+def adminPage(request, adminId):
+    try:
+        admin = Admin.objects.get(adminId=adminId)
+        studentDetails = Student.objects.all().values()
+
+        totalmentor = Mentor.objects.all().count()
+        totalstudent = Mentor.objects.all().count()
+
+        admin_details = {
+            'adminDetails': admin,
+            'studentsDetails': studentDetails,
+            'totalMentor':totalmentor,
+            'totalStudent':totalstudent,
+
+        }
+        return render(request, 'admin_page.html', admin_details)
+    except Admin.DoesNotExist:
+        # Handle case where admin with specified ID doesn't exist
+        return HttpResponse("Admin not found")
+
+def adminDeleteStudent(request, adminId,studentId):
+    deleteStudent = Student.objects.get(studentId=studentId)
+    deleteStudent.delete()
+    return redirect('adminDisplayMentor', adminId = adminId)
+
+def adminDeleteMentor(request,adminId, mentorId):
+    deleteMentor = Mentor.objects.get(mentorId=mentorId)
+    deleteMentor.delete()
+    return redirect('adminDisplayMentor', adminId = adminId)
+
+def viewProfileStudent(request, studentId):
+    student = Student.objects.get(studentId=studentId)
+    mentor = Mentor.objects.filter(mentorId=student.mentor).values
+    studentProfile={
+        'studentDetails': student,
+    }
+    return render(request, 'profileStudent.html', studentProfile)
+
+def editProfileStudent(request, studentId):
+    student = Student.objects.get(studentId=studentId)
+    mentor = Mentor.objects.filter(mentorId=student.mentor).values()
+
+    studentProfile={
+        'studentDetails': student,
+        "mentorDetails": mentor,
+    }
+
+    return render(request, 'editProfile.html', studentProfile)
+
+def submitEditProfileStudent(request, studentId):
+    if request.method == "POST":
+        studentId = studentId
+        studentName = request.POST['studentName']
+        studentCourse = request.POST['studentCourse']
+        studentPhone = request.POST['studentPhone']
+        studentAdd = request.POST['studentAdd']
+        studentMentor = request.POST['studentMentor']
+
+        menID= Mentor.objects.get(mentorId=studentMentor)
+
+        addStudent = Student(studentId=studentId,mentor=menID, course=studentCourse, studentName=studentName,address=studentAdd, phone=studentPhone)
+        addStudent.save()
+
+    return redirect('profile', studentId=studentId)
