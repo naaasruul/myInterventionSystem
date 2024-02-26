@@ -28,10 +28,13 @@ urlpatterns = [
 
     # lecturer make appointment
     path("lecturer/myAppointment/<str:mentorId>", views.makeAppointment, name="homeAppointment"),
-    path("lecturer/myAppointment/submitAppointment/<str:mentorId>", views.submitAppointment, name="makeAppointment"),
+    path("lecturer/myAppointment/submitAppointment/<str:mentorId>", views.submitAppointment, name="submitLectApp"),
     path("lecturer/myAppointment/submitAppointment/updateViewsAppointment/<str:appId>", views.updateAppointment, name="makeAppointment"),
-    path("lecturer/myAppointment/submitAppointment/updateAppointment/<str:appId>", views.updateAppointment, name="makeAppointment"),
-    path("lecturer/myAppointment/submitAppointment/updateAppointment/update/<str:appId>", views.submitUpdateAppointment, name="makeAppointment"),
+    # path("lecturer/myAppointment/submitAppointment/updateAppointment/<str:appId>", views.updateAppointment, name="makeAppointment"),
+    path("lecturer/myAppointment/submitAppointment/updateAppointment/update/<str:appId>", views.submitUpdateAppointment, name="submitAppointment"),
+    path("lecturer/myAppointment/pending/<str:mentorId>", views.viewPendingApp, name="Pending"),
+    path("lecturer/myAppointment/success/<str:appId>/<str:mentorId>", views.approveApp, name="success"),
+    path("lecturer/myAppointment/reject/<str:appId>/<str:mentorId>", views.rejectApp, name="reject"),
 
     # Lecturer delete appointment
     path("lecturer/myAppointment/submitAppointment/<str:appId>/<str:mentorId>", views.viewDeleteAppo, name="viewDeleteAppo"),
@@ -66,6 +69,8 @@ urlpatterns = [
     path('student/profile/<str:studentId>',views.viewProfileStudent,name='profile'),
     path('student/profile/edit/<str:studentId>',views.editProfileStudent,name='editProfile'),
     path('student/profile/edit/<str:studentId>/editing',views.submitEditProfileStudent,name='submitEditProfile'),
+    path('student/<str:studentId>/makeappointment',views.viewStudentAppointment,name='studentViewAppointment'),
+    path('student/<str:studentId>/makeappointment/submitApp',views.submitStudentApp,name='submitStudentApp'),
     
 
     # path("about", views.about, name="about"),

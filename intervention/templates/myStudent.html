@@ -16,7 +16,7 @@
         <div class="container-fluid">
             <span class="navbar-brand my-nav mb-0 h1">
                 <img src="{% static 'assets/LogoKPM.png' %}" alt="" width="40">
-                <h4>Intervention System</h4>
+                <h4>KPMCare</h4>
             </span>
         </div>
     </nav>
@@ -43,6 +43,9 @@
                         <th scope="col">ID</th>
                         <th scope="col">Student Name</th>
                         <th scope="col">Mentor</th>
+                        <th scope="col">Course</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Phone Number</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,6 +59,9 @@
                             <td>{{ mentor.mentorName }}</td>
                             {%endif%}
                             {% endfor%}
+                            <td>{{student.course}}</td>
+                            <td>{{student.address}}</td>
+                            <td>{{student.phone}}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -75,6 +81,9 @@
                         <th scope="col">ID</th>
                         <th scope="col">Student Name</th>
                         <th scope="col">Mentor</th>
+                        <th scope="col">Course</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Phone Number</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,6 +97,9 @@
                             <td>{{ mentor.mentorName }}</td>
                             {%endif%}
                             {% endfor%}
+                            <td>{{student.course}}</td>
+                            <td>{{student.address}}</td>
+                            <td>{{student.phone}}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

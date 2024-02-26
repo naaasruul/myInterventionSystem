@@ -77,6 +77,7 @@ def studentPage(request, studentId):
         totalRepo = Report.objects.filter(student=studentId).count()
         totalApp = Appointment.objects.filter(student=studentId).count()
         studentDetails = Student.objects.get(studentId=studentId)
+        
         student_details = {
             'studentDetails': student,
             'studentDetails1':studentDetails,
@@ -99,12 +100,14 @@ def lecturerPage(request, mentorId):
         report = Report.objects.all().values
         studentDetails = Student.objects.all().values
         appointment = Appointment.objects.filter(mentor=mentorId).values()
+        totalPendingApp = Appointment.objects.filter(status="Pending...", mentor=mentorId).count()
 
         lecturer_details = {
             'lecturerDetails': lecturer,
             'reports': report,
             'studentDetails':studentDetails,
             'appointmentDetails': appointment,
+            'totalPendingApp':totalPendingApp
         }
         return render(request, 'lecturer_page.html', lecturer_details)
     except Mentor.DoesNotExist:
@@ -195,7 +198,7 @@ def viewDeleteReport(request, repId, mentorId):
     return redirect('lecturerPage',mentorId=mentorId)
 
 def searchReport(request, mentorId):
-    searchData = Student.objects.get(mentor=mentorId)
+    # searchData = Student.objects.get(mentor=mentorId)
     searchName = Student.objects.filter(Q(studentName=request.GET.get('searchItem')))
 
 
@@ -280,7 +283,7 @@ def submitAppointment(request, mentorId):
         mentorID = Mentor.objects.get(mentorId=menId)
         stuID = Student.objects.get(studentId=studentId)
 
-        appointment = Appointment(mentor=mentorID, student=stuID, appointmentDate=datetime, venue=venue, time=time, description=message, purpose=purpose)
+        appointment = Appointment(mentor=mentorID, student=stuID, appointmentDate=datetime, venue=venue, time=time, description=message, purpose=purpose, status="Successfully")
         appointment.save()
 
     return redirect('lecturerPage', mentorId=mentorId)
@@ -292,7 +295,7 @@ def updateAppointment(request, appId):
     displayAllStudent = Student.objects.all().values()
 
     mentorId = appDetails.mentor
-    appId = appDetails.id
+    appId = appDetails
     displayMentor = Mentor.objects.get(mentorId=mentorId.mentorId)
     displayStudent = Student.objects.filter(mentor=mentorId.mentorId)
 
@@ -320,10 +323,32 @@ def submitUpdateAppointment(request, appId):
     updateid.time = time
     updateid.description = message
     updateid.purpose = purpose
+    updateid.status = "Successfully"
 
     updateid.save()
     return redirect('lecturerPage',mentorId=menId)
 
+def approveApp(request, appId,mentorId):
+    app = Appointment.objects.get(id=appId)
+    app.status = "Successfully"
+    app.save()
+    return redirect('lecturerPage',mentorId=mentorId)
+
+def rejectApp(request, appId, mentorId):
+    app = Appointment.objects.get(id=appId)
+    app.status = "Rejected"
+    app.save()
+    return redirect('lecturerPage',mentorId=mentorId)
+def viewPendingApp(request, mentorId):
+    lecturer = Mentor.objects.get(mentorId=mentorId)
+    pendingApp=Appointment.objects.filter(mentor=mentorId).values
+    mentorDetails = Mentor.objects.all().values
+    pending = {
+        'lecturerDetails': lecturer,
+        'pendingApp':pendingApp
+    }
+    return render(request, "appointmentPending.html", pending)
+    
 def viewDeleteAppo(request,appId, mentorId):
     appoDetails= Appointment.objects.get(id=appId)
     appoDetails.delete()
@@ -431,64 +456,84 @@ def adminAddStudent(request, adminId):
     }
     return render(request, 'addStudent.html', context)
     
-def adminSubmitAddMentor(request,adminId):
+from django.core.exceptions import ObjectDoesNotExist
+
+def adminSubmitAddMentor(request, adminId):
     mentorDetails = Mentor.objects.all().values()
     admin = Admin.objects.get(adminId=adminId)
+    messages = {}  # Initialize messages
+
     if request.method == "POST":
-        mentorId = 'l'+ request.POST['username']
+        mentorId = 'L' + request.POST['username']
         mentorName = request.POST['name']
         mentorPass = request.POST['password']
         mentorConfirmPass = request.POST['confirmPassword']
 
         if mentorPass != mentorConfirmPass:
             messages = {
-                "message":"Password doesn't match!",
+                "message": "Password doesn't match!",
                 'adminDetails': admin,
-                'mentorDetails':mentorDetails
+                'mentorDetails': mentorDetails
             }
-            return render(request, 'addStudent.html', messages)
         else:
             try:
-                mentor = Mentor(mentorId=mentorId,mentorName=mentorName,password=mentorPass)
-                mentor.save()
-                return redirect('adminPage', adminId=adminId)
-            except:
+                # Check if mentorId already exists
+                existing_mentor = Mentor.objects.get(mentorId=mentorId)
                 messages = {
-                "message":"Try again!",
-                'adminDetails': admin
+                    "message": "Mentor ID already exists!",
+                    'adminDetails': admin,
+                    'mentorDetails': mentorDetails
                 }
-                return render(request, 'addStudent.html', messages)
-            
-            messages = {
-                "messages":"error"
-            }
+            except ObjectDoesNotExist:
+                try:
+                    mentor = Mentor(mentorId=mentorId, mentorName=mentorName, password=mentorPass)
+                    mentor.save()
+                    return redirect('adminPage', adminId=adminId)
+                except:
+                    messages = {
+                        "message": "Error saving mentor!",
+                        'adminDetails': admin
+                    }
+
     return render(request, 'addMentor.html', messages)
+
+
 
 def adminSubmitAddStudent(request, adminId):
     mentorDetails = Mentor.objects.all().values()
     admin = Admin.objects.get(adminId=adminId)
     if request.method == "POST":
-        studentId = "ST"+request.POST['username']
+        studentId = "ST" + request.POST['username']
         studentName = request.POST['name']
         studentMentor = request.POST['mentor']
+        studentCourse = request.POST['course']
         studentPass = request.POST['password']
         studentConfirmPass = request.POST['confirmPassword']
 
         menId = Mentor.objects.get(mentorId=studentMentor)
         if studentPass != studentConfirmPass:
             messages = {
-                "message":"Password doesn't match!",
+                "message": "Password doesn't match!",
                 'adminDetails': admin,
-                'mentorDetails':mentorDetails
+                'mentorDetails': mentorDetails
             }
             return render(request, 'addStudent.html', messages)
         else:
-            menId = Mentor.objects.get(mentorId=studentMentor)
-            student = Student(studentId=studentId,studentName=studentName,mentor=menId,password=studentPass)
-            student.save()
-            return redirect('adminPage', adminId=adminId)
+            # Check if the studentId already exists
+            if Student.objects.filter(studentId=studentId).exists():
+                messages = {
+                    "message": "Student ID already exists!",
+                    'adminDetails': admin,
+                    'mentorDetails': mentorDetails
+                }
+                return render(request, 'addStudent.html', messages)
+            else:
+                student = Student(studentId=studentId, studentName=studentName, course=studentCourse, mentor=menId, password=studentPass)
+                student.save()
+                return redirect('adminPage', adminId=adminId)
 
-    return render(request, 'addStudent.html', messages)
+    return render(request, 'addStudent.html', {'adminDetails': admin, 'mentorDetails': mentorDetails})
+
 
 def adminPage(request, adminId):
     try:
@@ -496,7 +541,7 @@ def adminPage(request, adminId):
         studentDetails = Student.objects.all().values()
 
         totalmentor = Mentor.objects.all().count()
-        totalstudent = Mentor.objects.all().count()
+        totalstudent = Student.objects.all().count()
 
         admin_details = {
             'adminDetails': admin,
@@ -549,8 +594,41 @@ def submitEditProfileStudent(request, studentId):
         studentMentor = request.POST['studentMentor']
 
         menID= Mentor.objects.get(mentorId=studentMentor)
-
-        addStudent = Student(studentId=studentId,mentor=menID, course=studentCourse, studentName=studentName,address=studentAdd, phone=studentPhone)
-        addStudent.save()
+        student = Student.objects.get(studentId=studentId)
+        # addStudent = Student(studentId=studentId,mentor=menID, course=studentCourse, studentName=studentName,address=studentAdd, phone=studentPhone)
+        student.studentName=studentName
+        student.course=studentCourse
+        student.phone=studentPhone
+        student.address=studentAdd
+        student.save()
 
     return redirect('profile', studentId=studentId)
+
+def viewStudentAppointment(request,studentId):
+    try:
+        student = Student.objects.get(studentId=studentId)
+        mentor = Mentor.objects.all().values
+        student_details ={
+            "studentDetails":student,
+            "lecturerDetails":mentor,
+        }
+
+        return render(request, 'studentAppointment.html', student_details)
+    except Student.DoesNotExist:
+        # Handle case where student with specified ID doesn't exist
+        return HttpResponse("Student not found")
+
+def submitStudentApp(request, studentId):
+    if request.method == "POST":
+        stuid = studentId
+        mentorid = request.POST["appointmentLecturerId"]
+        date = request.POST["appointmentDate"]
+        venue = request.POST["appointmentVenue"]
+        time = request.POST["appointmentTime"]
+        purpose = request.POST["appointmentPurpose"]
+
+        menid = Mentor.objects.get(mentorId=mentorid)
+        stu_id = Student.objects.get(studentId=stuid)
+        addApp = Appointment(mentor=menid,student=stu_id,appointmentDate=date,venue=venue,time=time,purpose=purpose)
+        addApp.save()
+    return redirect('studentPage',studentId=studentId)

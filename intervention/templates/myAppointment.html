@@ -16,7 +16,7 @@
         <div class="container-fluid">
             <span class="navbar-brand my-nav mb-0 h1">
                 <img src="{% static 'assets/LogoKPM.png' %}" alt="" width="40">
-                <h4>Intervention System</h4>
+                <h4>KPMCare</h4>
             </span>
         </div>
     </nav>
@@ -28,7 +28,7 @@
         <div class="reportFormContainer">
             <h2 class="mb-3">Appoinment Form</h2>
             {% if mode == "submit" %}
-            <form method="post" action="./submitAppointment/{{mentorId.mentorId}}">
+            <form method="post" action="{% url 'submitLectApp' mentorId.mentorId%}">
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="exampleFormControlInput1" class="form-label">Lecturer ID</label>
@@ -76,7 +76,8 @@
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
             {% else %}
-            <form method="post" action="../updateAppointment/update/{{app}}">
+            <!-- {{app.id}} -->
+            <form method="post" action="{% url 'submitAppointment' app.id%}">
                 {% csrf_token %}
                 <fieldset>
                     <div class="mb-3">
@@ -87,15 +88,14 @@
                     </div>
                     <div class="mb-3">
                         <label for="exampleFormControlInput1" class="form-label">Student Name</label>
-                        {% for student in studentId %}                            
-                        <input type="hidden" name="appStudentId" value="{{student.studentId}}">
-                        {% endfor%}    
-                                            
+                        {% for student in studentId %}    
+                        {% if app.student.studentId == student.studentId%}                        
+                        <input type="hidden" name="appStudentId" value="{{student.studentId}}">            
                         <select disabled  class="form-select form-select-lg mb-3"
                             aria-label="Large select example">
-                            {% for student in studentId %}
                             <option value="{{student.studentId}}">{{student.studentName}}</option>
-                            {% endfor%}
+                            {%endif%}
+                            {% endfor %}
                         </select>
                     </div>
                 </fieldset>

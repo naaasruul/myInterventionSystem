@@ -16,7 +16,7 @@
     <div class="container-fluid">
       <span class="navbar-brand my-nav mb-0 h1">
         <img src="{% static 'assets/LogoKPM.png' %}" alt="" width="40">
-        <h4>Intervention System</h4>
+        <h4>KPMCare</h4>
       </span>
     </div>
   </nav>
@@ -44,7 +44,7 @@
   </nav>
   <main class="m-3">
 
-
+    <!-- <h1>Welcome back, {{studentDetails1.studentName}}</h1>  -->
     {% if mode == "displayReport"%}
     <h2>All Reports</h2>
     <table class="table table-hover">
@@ -97,11 +97,13 @@
           <th scope="col">Time</th>
           <th scope="col">Description</th>
           <th scope="col">Purpose</th>
+          <th scope="col">Status</th>
         </tr>
       </thead>
       <tbody>
         {% for app in appointmentDetails %}
-        <tr>
+        {%if app.status == "Rejected"%}
+        <tr  class="table-danger">
           <th scope="row">AP{{app.id}}</th>
           {%for student in studentDetails%}
           {% if app.student_id == student.studentId%}
@@ -119,7 +121,52 @@
           <td>{{app.time}}</td>
           <td>{{app.description}}</td>
           <td>{{app.purpose}}</td>
+          <td>{{app.status}}</td>
         </tr>
+        {% elif app.status == "Successfully"%}
+        <tr  class="table-success">
+          <th scope="row">AP{{app.id}}</th>
+          {%for student in studentDetails%}
+          {% if app.student_id == student.studentId%}
+          <td>{{student.studentName}}</td>
+          {%endif%}
+          {% endfor%}
+
+          {% for mentor in mentorDetails%}
+          {% if app.mentor_id == mentor.mentorId%}
+          <td>{{mentor.mentorName}}</td>
+          {%endif%}
+          {%endfor%}
+          <td>{{app.appointmentDate}}</td>
+          <td>{{app.venue}}</td>
+          <td>{{app.time}}</td>
+          <td>{{app.description}}</td>
+          <td>{{app.purpose}}</td>
+          <td>{{app.status}}</td>
+        </tr>
+        {% else %}
+        <tr  class="table-warning">
+          <th scope="row">AP{{app.id}}</th>
+          {%for student in studentDetails%}
+          {% if app.student_id == student.studentId%}
+          <td>{{student.studentName}}</td>
+          {%endif%}
+          {% endfor%}
+
+          {% for mentor in mentorDetails%}
+          {% if app.mentor_id == mentor.mentorId%}
+          <td>{{mentor.mentorName}}</td>
+          {%endif%}
+          {%endfor%}
+          <td>{{app.appointmentDate}}</td>
+          <td>{{app.venue}}</td>
+          <td>{{app.time}}</td>
+          <td>{{app.description}}</td>
+          <td>{{app.purpose}}</td>
+          <td>{{app.status}}</td>
+        </tr>
+
+        {%endif%}
         {% endfor%}
       </tbody>
     </table>
@@ -138,6 +185,9 @@
           <th scope="col">Student ID</th>
           <th scope="col">Student Name</th>
           <th scope="col">Mentor Name</th>
+          <th scope="col">Address</th>
+          <th scope="col">No Phone</th>
+          <th scope="col">Course</th>
         </tr>
       </thead>
       <tbody>
@@ -175,6 +225,9 @@
           <td>{{mentor.mentorName}}</td>
           {%endif%}
           {%endfor%}
+          <td>{{student.address}}</td>
+          <td>{{student.phone}}</td>
+          <td>{{student.course}}</td>
           <td>
             <button data-bs-toggle="modal" data-bs-target="#{{student.studentId}}" type="button" class="btn btn-danger"><i
                 class="fa-solid fa-trash"></i></button>
@@ -237,7 +290,8 @@
     </table>
     {%else%}
 
-    <h1>Hi {{adminDetails.adminName}}!</h1>
+    <h1>Welcome back, {{adminDetails.adminName}}</h1>
+    <p class="fw-lighter">Here's what's going on at your college today.</p>
     <div class="row mt-5 center">
       <div class="col-sm-6 mb-3 mb-sm-0">
         <div class="card">

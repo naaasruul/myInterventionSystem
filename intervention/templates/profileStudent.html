@@ -21,7 +21,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <img src="{% static 'assets/LogoKPM.png' %}" alt="" width="40">
-                <h4>Intervention System</h4>
+                <h4>KPMCare</h4>
             </span>
         </div>
     </nav>
@@ -50,7 +50,7 @@
                             Mentor: {{studentDetails.mentor.mentorName}}
                         </p>
                     </span>
-                    <span class="d-flex align-items-end"> <a href="{% url 'editProfile' studentDetails.studentId%}"><p><i class="fa-solid fa-lg fa-pen-to-square"></i></p></a></span>
+                    <span class="d-flex ms-3 align-items-end"> <a href="{% url 'editProfile' studentDetails.studentId%}"><p><i class="fa-solid fa-lg fa-pen-to-square"></i></p></a></span>
                 </span>
                 
                 <div class="row">
@@ -67,6 +67,14 @@
                         <div class="card-body">
                             <h5 class="card-title"><i class="fa-solid fa-phone me-2"></i> Phone number</h5>
                             <p class="card-text">{{studentDetails.phone}}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12 mt-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fa-solid fa-school"></i> Course</h5>
+                            <p class="card-text">{{studentDetails.course}}</p>
                         </div>
                     </div>
                 </div>
