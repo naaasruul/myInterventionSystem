@@ -1,6 +1,3 @@
-Based on the details provided in the report, here's a README template tailored to your **Intervention System** project, also referred to as **KPMCare**:
-
----
 
 # Intervention System (KPMCare) 🌟
 
