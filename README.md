@@ -44,7 +44,7 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/intervention-system.git
+   git clone https://github.com/naaasruul/intervention-system.git
    ```
 2. Navigate to the project directory:
    ```bash
