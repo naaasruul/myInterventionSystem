@@ -80,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Intervention_System.wsgi'
+WSGI_APPLICATION = 'Intervention_System.wsgi.application'
 
 
 # Database
